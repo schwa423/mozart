@@ -12,10 +12,29 @@ namespace mozart {
 
 std::ostream& operator<<(std::ostream& os, const KeyData& value) {
   if (value.code_point) {
-    return os << "{character=" << value.code_point << "}";
+    os << "{character=" << value.code_point;
   } else {
-    return os << "{hid=" << ftl::StringPrintf("0x%08X", value.hid_usage) << "}";
+    os << "{hid=" << ftl::StringPrintf("0x%08X", value.hid_usage);
   }
+  if (value.modifiers) {
+    os << ",modifiers";
+    if (value.modifiers & mozart::CAPS_LOCK) {
+      os << ":CAPS_LOCK";
+    }
+    if (value.modifiers & mozart::SHIFT) {
+      os << ":SHIFT";
+    }
+    if (value.modifiers & mozart::CONTROL) {
+      os << ":CONTROL";
+    }
+    if (value.modifiers & mozart::ALT) {
+      os << ":ALT";
+    }
+    if (value.modifiers & mozart::GUI) {
+      os << ":GUI";
+    }
+  }
+  return os << "}";
 }
 
 std::ostream& operator<<(std::ostream& os, const PointerData& value) {

@@ -45,4 +45,11 @@ enum PointerKind {
   TOUCH,
   MOUSE,
 };
+
+const uint32 CAPS_LOCK = 1;
+const uint32 SHIFT     = 2;
+const uint32 CONTROL   = 4;
+const uint32 ALT       = 8;
+const uint32 GUI       = 16;
+
 // end-no-format
