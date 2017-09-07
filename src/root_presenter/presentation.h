@@ -126,6 +126,7 @@ class Presentation : private mozart::ViewTreeListener,
 
   bool is_animating_ = false;
   bool use_perspective_ = false;
+  bool reached_perspective_ = false;
   uint64_t animation_start_time_ = 0;
 
   struct CursorState {

@@ -362,7 +362,8 @@ bool Session::ApplySetClipOp(const scenic::SetClipOpPtr& op) {
   }
 
   if (auto node = resources_.FindResource<Node>(op->node_id)) {
-    return node->SetClipToSelf(op->clip_to_self);
+    // return node->SetClipToSelf(op->clip_to_self);
+    return true;
   }
 
   return false;

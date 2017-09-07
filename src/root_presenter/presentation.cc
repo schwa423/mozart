@@ -287,12 +287,13 @@ void Presentation::OnEvent(mozart::InputEventPtr event) {
 }
 
 void Presentation::StartAnimation() {
-  if (is_animating_)
+  if (is_animating_ && !reached_perspective_)
     return;
 
   animation_start_time_ = mx_time_get(MX_CLOCK_MONOTONIC);
   is_animating_ = true;
   use_perspective_ = !use_perspective_;
+  reached_perspective_ = false;
   UpdateAnimation(animation_start_time_);
 }
 
@@ -310,33 +311,48 @@ bool Presentation::UpdateAnimation(uint64_t presentation_time) {
   constexpr float kOrthoEyeDist = 60000;
   const float fovy = 2.f * atan(half_height / kOrthoEyeDist);
   glm::vec3 eye_start(half_width, half_height, kOrthoEyeDist);
-  glm::vec3 eye_mid(half_width, half_height, 1.3f * kOrthoEyeDist);
-  glm::vec3 eye_end(-0.2f * kOrthoEyeDist, 2.f * kOrthoEyeDist,
-                    1.5f * kOrthoEyeDist);
+  glm::vec3 eye_mid(-0.06f * kOrthoEyeDist, 0.5f * kOrthoEyeDist,
+                    1.1f * kOrthoEyeDist);
 
   // Always look at the middle of the stage.
   float target[3] = {half_width, half_height, 0};
-  float up[3] = {0, 1, 0};
+
+  glm::vec3 glm_up(0, 0.01, -0.99);
+  glm_up = glm::normalize(glm_up);
+  float up[3] = {glm_up[0], glm_up[1], glm_up[2]};
 
   double secs = static_cast<double>(presentation_time - animation_start_time_) /
                 1'000'000'000;
   constexpr double kAnimationDuration = 1.3;
   float param = secs / kAnimationDuration;
+
   if (param >= 1.f) {
     param = 1.f;
-    is_animating_ = false;
 
-    if (!use_perspective_) {
+    if (use_perspective_) {
+      reached_perspective_ = true;
+    } else {
       // Switch back to ortho view.
+      is_animating_ = false;
       float ortho_eye[3] = {half_width, half_height, 1100.f};
       camera_.SetProjection(ortho_eye, target, up, 0.f);
       return true;
     }
   }
+
   if (!use_perspective_) {
     param = 1.f - param;  // Animating back to regular position.
   }
   param = glm::smoothstep(0.f, 1.f, param);
+
+  float eye_end_xy_radius = 1.01f * kOrthoEyeDist;
+  const float kMaxRotateAngle = 3.14159 / 4;
+  float eye_end_xy_angle =
+      sin(double(presentation_time) / 1'000'000'000) * kMaxRotateAngle * param;
+  float eye_end_x = sin(eye_end_xy_angle) * eye_end_xy_radius + half_width;
+  float eye_end_y = cos(eye_end_xy_angle) * eye_end_xy_radius + half_height;
+
+  glm::vec3 eye_end(eye_end_x, eye_end_y, 0.75f * kOrthoEyeDist);
 
   // Quadratic bezier.
   glm::vec3 eye = glm::mix(glm::mix(eye_start, eye_mid, param),
